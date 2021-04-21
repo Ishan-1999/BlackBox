@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+        integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw=="
+        crossorigin="anonymous" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
+    <title>BlackBox</title>
+</head>
+
+<body>
+    <div class="mplayer">
+        <p id="logo"><i class="fa fa-linode" aria-hidden="true"></i>
+            BlackBox</p>
+        <div class="left">
+            <!--song image-->
+            <img id="track_image" src="" alt="">
+            <div class="volume">
+                <p id="vol_show">90</p>
+                <i class="fa fa-volume-up" aria-hidden="true" id="vol_icon" onclick="mute_sound()"></i>
+                <input id="volume" type="range" min="0" max="100" value="90" onchange="vol_change()">
+            </div>
+        </div>
+        <div class="right">
+            <div class="show_song_no">
+                <p id="present">1</p>
+                <p>/</p>
+                <p id="total">5</p>
+            </div>
+            <p id="title">title.mp3</p>
+            <p id="artist">Artist Name</p>
+
+            <div class="middle">
+                <button onclick="previous_song()"><i class="fa fa-step-backward" aria-hidden="true"></i>
+                </button>
+                <button onclick="justplay()" id="play"><i class="fa fa-play" aria-hidden="true"></i>
+                </button>
+                <button onclick="next_song()" id="next_song"><i class="fa fa-step-forward" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="duration">
+                <input type="range" min="0" max="100" value="0" id="duration_slider" onchange="change_duration()">
+            </div>
+            <button id="auto" onclick="autoplay_switch()">Shuffle Play
+                <i class="fa fa-circle-o-notch" aria-hidden="true"></i></button>
+        </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+
+    <script>
+        let previous = document.querySelector('#pre');
+        let play = document.querySelector('#play');
+        let next = document.querySelector('#next');
+        let title = document.querySelector('#title');
+        let recent_vol = document.querySelector('#volume');
+        let vol_show = document.querySelector('#vol_show');
+        let slider = document.querySelector('#duration_slider');
+        let show_duration = document.querySelector('#show_duration');
+        let track_image = document.querySelector('#track_image');
+        let auto_play = document.querySelector('#auto');
+        let present = document.querySelector('#present');
+        let total = document.querySelector('#total');
+        let artist = document.querySelector('#artist');
+
+        let timer;
+        let autoplay = 0;
+
+        let index_no = 0;
+        let playing_song = false;
+
+        let track = document.createElement('audio');
+
+        let All_songs = [
+            {
+                name: 'Cold',
+                path: "static/audio/Boy_In_Space_-_Cold.mp3 ",
+                img: 'static/cold_boyInSpace.jpg',
+                singer:'Boy In Space' 
+            }
+        ];
+
+        function load_track(index_no) {
+            clearInterval(timer);
+
+            track.src = All_songs[index_no].path;
+            title.innerHTML = All_songs[index_no].name;
+            track_image.src = All_songs[index_no].img;
+            artist.innerHTML = All_songs[index_no].singer;
+            track.load();
+
+            total.innerHTML = All_songs.length;
+            present.innerHTML = index_no + 1;
+            timer = setInterval(range_slider, 1000);
+        }
+        load_track(index_no);
+
+        function justplay() {
+             if(playing_song==false) {
+                 playsong();
+             } else {
+                 pausesong();
+             }
+        }
+
+        function playsong() {
+            track.play();
+            playing_song = true;
+            play.innerHTML = '<i class="fa fa-pause"></i>';
+        }
+
+        function pausesong() {
+            track.pause();
+            playing_song = false;
+            play.innerHTML = '<i class="fa fa-play"></i>';
+        }
+
+        function next_song() {
+            if (index_no < All_songs.length - 1) {
+                index_no += 1;
+                load_track(index_no);
+                playsong();
+            } else {
+                index_no = 0;
+                load_track(index_no);
+                playsong();
+            }
+        }
+
+        function previous_song() {
+            if (index_no > 0) {
+                index_no -= 1;
+                load_track(index_no);
+                playsong();
+            } else {
+                index_no = All_songs.length;
+                load_track(index_no);
+                playsong();
+            }
+        }
+
+        function vol_change() {
+            vol_show.innerHTML = recent_vol.value;
+            track.volume = recent_vol.value / 100;
+            console.log(recent_vol);
+        }
+
+        function change_duration() {
+            slider_pos = track.duration*(slider.value / 100);
+            track.currentTime = slider_pos;
+        }
+
+        function range_slider() {
+            let pos = 0;
+
+            if(!isNaN(track.duration)) {
+                pos = track.currentTime * (100 / track.duration);
+                slider.value = pos;
+            }
+
+            if(track.ended) {
+                play.innerHTML = '<i class="fa fa-play"></i>';
+                if(autoplay == 1) {
+                    index_no += 1;
+                    load_track(index_no);
+                    playsong();
+                }
+            }
+        }
+
+        function autoplay_switch() {
+            if(autoplay == 1) {
+                autoplay = 0;
+                auto_play.style.background = "rgba(245, 245, 245, 0.1)";
+            } else {
+                auto_play = 1;
+                auto_play.style.background = "#ccc";
+            }
+        }
+
+        function mute_sound() {
+            track.volume = 0;
+            volume.value = 0;
+            vol_show.innerHTML = 0;
+        }
+    </script>
+</body>
+
+</html>
