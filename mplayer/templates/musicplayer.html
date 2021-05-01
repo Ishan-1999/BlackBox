@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
         integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw=="
         crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+        crossorigin="anonymous" />
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -20,25 +25,31 @@
 
 <body>
     <div class="mplayer">
-        <p id="logo"><i class="fa fa-linode" aria-hidden="true"></i>
-            BlackBox</p>
+        <div class="topbar container-fluid">
+            <p id="logo"><i class="fas fa-cube"></i><span id="logo_name" style="font-family: 'Pacifico', cursive;">BlackBox</span></p>
+        </div>
         <div class="left">
             <!--song image-->
-            <img id="track_image" src="" alt="">
+            <div class="image">
+                <img id="track_image" src="" alt="">
+            </div>
             <div class="volume">
-                <p id="vol_show">90</p>
-                <i class="fa fa-volume-up" aria-hidden="true" id="vol_icon" onclick="mute_sound()"></i>
+                <i class="fas fa-volume-up" aria-hidden="true" id="vol_icon" onclick="mute_sound()"></i>
                 <input id="volume" type="range" min="0" max="100" value="90" onchange="vol_change()">
             </div>
         </div>
         <div class="right">
             <div class="show_song_no">
-                <p id="present">1</p>
-                <p>/</p>
-                <p id="total">5</p>
+                <span id="present">1</span>
+                <span>/</span>
+                <span id="total">5</span>
             </div>
-            <p id="title">title.mp3</p>
-            <p id="artist">Artist Name</p>
+            <div class="container-fluid title">
+                <p id="title">title.mp3</p>
+            </div>
+            <div class="container-fluid artist">
+                <p id="artist">Artist Name</p>
+            </div>
 
             <div class="middle">
                 <button onclick="previous_song()"><i class="fa fa-step-backward" aria-hidden="true"></i>
@@ -50,10 +61,12 @@
             </div>
 
             <div class="duration">
-                <input type="range" min="0" max="100" value="0" id="duration_slider" onchange="change_duration()">
+                <span id="duration_time"><span id="first_min">0</span>:<span id="first_sec">00</span></span><input
+                    type="range" min="0" max="100" value="0" id="duration_slider" onchange="change_duration()">
+                <span id="total_time"><span id="scnd_min">0</span>:<span id="scnd_sec">00</span></span>
             </div>
-            <button id="auto" onclick="autoplay_switch()">Shuffle Play
-                <i class="fa fa-circle-o-notch" aria-hidden="true"></i></button>
+            <button id="shuffle" onclick="shuffle_play()">Shuffle Play
+                <i class="fas fa-random"></i></button>
         </div>
     </div>
 
@@ -75,11 +88,10 @@
         let next = document.querySelector('#next');
         let title = document.querySelector('#title');
         let recent_vol = document.querySelector('#volume');
-        let vol_show = document.querySelector('#vol_show');
         let slider = document.querySelector('#duration_slider');
         let show_duration = document.querySelector('#show_duration');
         let track_image = document.querySelector('#track_image');
-        let auto_play = document.querySelector('#auto');
+        let shuffle = document.querySelector('#shuffle');
         let present = document.querySelector('#present');
         let total = document.querySelector('#total');
         let artist = document.querySelector('#artist');
@@ -91,15 +103,16 @@
         let playing_song = false;
 
         let track = document.createElement('audio');
-
-        let All_songs = [
-            {
-                name: 'Cold',
-                path: "static/audio/Boy_In_Space_-_Cold.mp3 ",
-                img: 'static/cold_boyInSpace.jpg',
-                singer:'Boy In Space' 
-            }
-        ];
+        let All_songs = [];
+        Allsongs = {{ data | safe }};
+        for (i = 0; i < Allsongs.length; i++) {
+            All_songs.push({
+                name: Allsongs[i]['songname'],
+                path: Allsongs[i]['audio'].slice(8),
+                img: Allsongs[i]['img'].slice(8),
+                singer: Allsongs[i]['artist']
+            });
+        }
 
         function load_track(index_no) {
             clearInterval(timer);
@@ -117,13 +130,12 @@
         load_track(index_no);
 
         function justplay() {
-             if(playing_song==false) {
-                 playsong();
-             } else {
-                 pausesong();
-             }
+            if (playing_song == false) {
+                playsong();
+            } else {
+                pausesong();
+            }
         }
-
         function playsong() {
             track.play();
             playing_song = true;
@@ -135,13 +147,27 @@
             playing_song = false;
             play.innerHTML = '<i class="fa fa-play"></i>';
         }
-
+        let already_played = [];
         function next_song() {
             if (index_no < All_songs.length - 1) {
-                index_no += 1;
-                load_track(index_no);
-                playsong();
-            } else {
+                if (autoplay == 1) {
+                    already_played.push(index_no);
+                    temp = index_no;
+                    while (already_played.includes(temp) && (already_played.length < All_songs.length)) {//while loop  problem
+                        temp = Math.floor(Math.random() * ((All_songs.length - 1) - 0) + 0);
+                    }
+                    index_no = temp;
+                    load_track(index_no);
+                    playsong();
+                    console.log(already_played);
+                }
+                else {
+                    index_no += 1;
+                    load_track(index_no);
+                    playsong();
+                }
+            }
+            else {
                 index_no = 0;
                 load_track(index_no);
                 playsong();
@@ -160,49 +186,81 @@
             }
         }
 
+        function shuffle_play() {
+            if (autoplay == 1) {
+                autoplay = 0;
+                shuffle.style.background = "rgba(245, 245, 245, 0.1)";
+                shuffle.style.color = '#ccc';
+            } else {
+                autoplay = 1;
+                shuffle.style.background = "#ccc";
+                shuffle.style.color = 'black';
+            }
+        }
+
         function vol_change() {
-            vol_show.innerHTML = recent_vol.value;
             track.volume = recent_vol.value / 100;
-            console.log(recent_vol);
         }
 
         function change_duration() {
-            slider_pos = track.duration*(slider.value / 100);
+            slider_pos = track.duration * (slider.value / 100);
             track.currentTime = slider_pos;
         }
 
         function range_slider() {
             let pos = 0;
 
-            if(!isNaN(track.duration)) {
+            if (!isNaN(track.duration)) {
                 pos = track.currentTime * (100 / track.duration);
                 slider.value = pos;
-            }
-
-            if(track.ended) {
-                play.innerHTML = '<i class="fa fa-play"></i>';
-                if(autoplay == 1) {
-                    index_no += 1;
-                    load_track(index_no);
-                    playsong();
+                var dur1 = track.duration;
+                let timeDuration = [];
+                timeDuration = findDuration(dur1);
+                document.getElementById("scnd_min").innerHTML = "0" + timeDuration[0];
+                if (timeDuration[1] < 10) {
+                    document.getElementById("scnd_sec").innerHTML = "0" + timeDuration[1];
+                } else {
+                    document.getElementById("scnd_sec").innerHTML = timeDuration[1];
+                }
+                var dur2 = track.currentTime;
+                timeDuration = findDuration(dur2);
+                document.getElementById("first_min").innerHTML = "0" + timeDuration[0];
+                if (timeDuration[1] < 10) {
+                    document.getElementById("first_sec").innerHTML = "0" + timeDuration[1];
+                } else {
+                    document.getElementById("first_sec").innerHTML = timeDuration[1];
                 }
             }
-        }
 
-        function autoplay_switch() {
-            if(autoplay == 1) {
-                autoplay = 0;
-                auto_play.style.background = "rgba(245, 245, 245, 0.1)";
-            } else {
-                auto_play = 1;
-                auto_play.style.background = "#ccc";
+            if (track.ended) {
+                play.innerHTML = '<i class="fa fa-play"></i>';
+                next_song();
             }
         }
 
+        let vol = true;
+        let temp_vol = 0;
         function mute_sound() {
-            track.volume = 0;
-            volume.value = 0;
-            vol_show.innerHTML = 0;
+            if (vol == true) {
+                document.getElementById("vol_icon").className = "fas fa-volume-mute";
+                temp_vol = volume.value;
+                track.volume = 0;
+                volume.value = 0;
+                vol = false;
+            }
+            else {
+                document.getElementById("vol_icon").className = "fas fa-volume-up";
+                volume.value = temp_vol
+                track.volume = temp_vol / 100;
+                vol = true;
+            }
+        }
+
+        function findDuration(dur) {
+            var minutes = Math.floor(dur / 60);
+            var seconds = Math.floor(dur - minutes * 60);
+
+            return [minutes, seconds];
         }
     </script>
 </body>
